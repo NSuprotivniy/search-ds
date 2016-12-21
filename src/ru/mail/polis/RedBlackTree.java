@@ -111,12 +111,12 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
         if (root == nil) {
             return nil;
         }
-        if (value.compareTo(t.value) < 0) {
+        if (compare(value, t.value) < 0) {
             if (t.left != nil) {
                 return contains(value, t.left);
             }
         }
-        else if (value.compareTo(t.value) > 0) {
+        else if (compare(value, t.value) > 0) {
             if (t.right != nil) {
                 return contains(value, t.right);
             }
@@ -138,7 +138,7 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
         } else {
             node.color = Color.RED;
             while (true) {
-                if (node.value.compareTo(temp.value) < 0) {
+                if (compare(node.value, temp.value) < 0) {
                     if (temp.left == nil) {
                         temp.left = node;
                         node.parent = temp;
@@ -146,7 +146,7 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
                     } else {
                         temp = temp.left;
                     }
-                } else if (node.value.compareTo(temp.value) >= 0) {
+                } else if (compare(node.value, temp.value) >= 0) {
                     if (temp.right == nil) {
                         temp.right = node;
                         node.parent = temp;
@@ -377,7 +377,7 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
     }
 
     private int compare(E v1, E v2) {
-        return comparator == nil ? v1.compareTo(v2) : comparator.compare(v1, v2);
+        return comparator == null ? v1.compareTo(v2) : comparator.compare(v1, v2);
     }
 
     @Override
@@ -389,6 +389,22 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
         RedBlackTree<Integer> tree = new RedBlackTree<Integer>();
 
         Random rnd = new Random();
+        for (int i = 0; i < 20; i++) {
+            tree.add(rnd.nextInt());
+        }
+
+        System.out.println(tree.size());
+        for (Integer i : tree.inorderTraverse())
+            System.out.println(i);
+
+        for (Integer i : tree.inorderTraverse())
+            tree.remove(i);
+
+        System.out.println(tree.size());
+        for (Integer i : tree.inorderTraverse())
+            System.out.println(i);
+
+
         for (int i = 0; i < 20; i++) {
             tree.add(rnd.nextInt());
         }

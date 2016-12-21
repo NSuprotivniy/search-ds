@@ -10,18 +10,13 @@ public class AVLTree<E extends Comparable<E>> implements ISortedSet<E> {
 
     class Node {
 
-        Node(E value, Node parent) {
+        Node(E value) {
             this.value = value;
-            this.parent = parent;
-            size = 1;
         }
 
         E value;
         Node left;
         Node right;
-        Node parent;
-
-        int size;
 
         int height;
 
@@ -43,6 +38,7 @@ public class AVLTree<E extends Comparable<E>> implements ISortedSet<E> {
 
     private Node root;
     private final Comparator<E> comparator;
+    private int size;
 
     public AVLTree() {
         this.comparator = null;
@@ -94,7 +90,7 @@ public class AVLTree<E extends Comparable<E>> implements ISortedSet<E> {
 
     @Override
     public int size() {
-        return root.size;
+        return size;
     }
 
     @Override
@@ -106,45 +102,61 @@ public class AVLTree<E extends Comparable<E>> implements ISortedSet<E> {
 
     @Override
     public boolean contains(E value) {
+        Node node = root;
+
+        while (node != null) {
+            int cmp = compare(value, node.value);
+            if (cmp == 0) return true;
+            if (cmp < 0) node = node.left;
+            if (cmp > 0) node = node.right;
+        }
+
         return false;
     }
 
+
     @Override
-    public boolean add(E value) {
+    public boolean add( E value )
+    {
         if (value == null) {
             throw new NullPointerException("value is null");
         }
 
-        if (root == null) {
-            root = new Node(value, null);
-            return true;
-        }
+        Node node = add( value, root );
+        if (node == null) return false;
 
-        Node curr = root;
-        while (true) {
-            int cmp = compare(curr.value, value);
-            if (cmp == 0) {
-                return false;
-            } else if (cmp < 0) {
-                if (curr.right != null) {
-                    curr = curr.right;
-                } else {
-                    curr.right = new Node(value, curr);
-                    break;
-                }
-            } else if (cmp > 0) {
-                if (curr.left != null) {
-                    curr = curr.left;
-                } else {
-                    curr.left = new Node(value, curr);
-                    break;
-                }
-            }
-        }
-
-        balance(curr);
-
+        size++;
+        root = node;
         return true;
+    }
+
+    private Node add( E value, Node node )
+    {
+        if( node == null )
+            node = new Node( value );
+        else if( compare(value, node.value) < 0 )
+        {
+            node.left = add( value, node.left );
+            if( height( node.left ) - height( node.right ) == 2 )
+                if( compare(value, node.left.value ) < 0 )
+                    node = rotateLeft( node );
+                else
+                    node = doubleRotateLeft( node );
+        }
+        else if( compare(value, node.value ) > 0 )
+        {
+            node.right = add( value, node.right );
+            if( height( node.right ) - height( node.left ) == 2 )
+                if( compare(value, node.right.value ) > 0 )
+                    node = rotateRight( node );
+                else
+                    node = doubleRotateRight( node );
+        }
+        else return null;
+
+        node.height = max( height( node.left ), height( node.right ) ) + 1;
+
+        return node;
     }
 
     private Node min(Node t) {
@@ -158,44 +170,55 @@ public class AVLTree<E extends Comparable<E>> implements ISortedSet<E> {
     @Override
     public boolean remove(E value) {
         if (value == null) throw new IllegalArgumentException("argument to delete() is null");
-        if (!contains(value)) return false;
-        root = remove(root, value);
+        //if (!contains(value)) return false;
+        root = remove(value, root);
         return true;
     }
 
-    private Node remove(Node x, E value) {
-        int cmp = value.compareTo(x.value);
-        if (cmp < 0) {
-            x.left = remove(x.left, value);
-        }
-        else if (cmp > 0) {
-            x.right = remove(x.right, value);
+    private Node remove(E x, Node node) {
+        if(node == null)
+            return node;
+        int compareResult = compare(x, node.value);
+        if(compareResult < 0)
+            node.left = remove(x, node.left);
+        else if(compareResult > 0)
+            node.right = remove(x, node.right);
+        else if(node.left != null && node.right != null) {
+            node.value = findMin(node.right).value;
+            node.right = remove(node.value, node.right);
         }
         else {
-            if (x.left == null) {
-                return x.right;
-            }
-            else if (x.right == null) {
-                return x.left;
-            }
-            else {
-                Node y = x;
-                x = min(y.right);
-                x.right = deleteMin(y.right);
-                x.left = y.left;
-            }
+            size--;
+            node = (node.left != null) ? node.left : node.right;
         }
-        x.size = 1 + x.left.size + x.right.size;
-        x.height = 1 + Math.max(height(x.left), height(x.right));
-        return balance(x);
+        return balance(node);
     }
 
-    private Node deleteMin(Node x) {
-        if (x.left == null) return x.right;
-        x.left = deleteMin(x.left);
-        x.size = 1 + x.left.size + x.right.size;
-        x.height = 1 + Math.max(height(x.left), height(x.right));
-        return balance(x);
+
+    private Node findMin(Node t) {
+        if(t == null)
+            return t;
+        while(t.left != null)
+            t = t.left;
+        return t;
+    }
+
+    private Node balance(Node node) {
+        if(node == null)
+            return node;
+        if(height(node.left) - height(node.right) > 1)
+            if(height(node.left.left) >= height(node.left.right))
+                node = rotateLeft(node);
+            else
+                node = doubleRotateLeft(node);
+        else
+        if(height(node.right) - height(node.left) > 1)
+            if(height(node.right.right) >= height(node.right.left))
+                node = rotateRight(node);
+            else
+                node = doubleRotateRight(node);
+        node.height = Math.max(height(node.left), height(node.right)) + 1;
+        return node;
     }
 
     private int compare(E v1, E v2) {
@@ -203,33 +226,9 @@ public class AVLTree<E extends Comparable<E>> implements ISortedSet<E> {
     }
 
 
-    private Node balance(Node x) {
 
-        Node y = x;
-        while (x != root) {
-            if (balanceFactor(x) < -1) {
-                if (balanceFactor(x.right) > 0) {
-                    x.right = rotateRight(x.right);
-                }
-                x = rotateLeft(x);
-            } else if (balanceFactor(x) > 1) {
-                if (balanceFactor(x.left) < 0) {
-                    x.left = rotateLeft(x.left);
-                }
-                x = rotateRight(x);
-            }
 
-            x = x.parent;
-        }
-
-        return y;
-    }
-
-    private int balanceFactor(Node x) {
-        return height(x.left) - height(x.right);
-    }
-
-    private Node doubleRodateLeft( Node k3 )
+    private Node doubleRotateLeft( Node k3 )
     {
         k3.left = rotateRight( k3.left );
         return rotateLeft( k3 );
@@ -272,10 +271,28 @@ public class AVLTree<E extends Comparable<E>> implements ISortedSet<E> {
     }
 
 
+
+
     public static void main(String[] args) {
         AVLTree<Integer> tree = new AVLTree<Integer>();
 
         Random rnd = new Random();
+        for (int i = 0; i < 20; i++) {
+            tree.add(rnd.nextInt());
+        }
+
+        System.out.println(tree.size());
+        for (Integer i : tree.inorderTraverse())
+            System.out.println(i);
+
+        for (Integer i : tree.inorderTraverse())
+            tree.remove(i);
+
+        System.out.println(tree.size());
+        for (Integer i : tree.inorderTraverse())
+            System.out.println(i);
+
+
         for (int i = 0; i < 20; i++) {
             tree.add(rnd.nextInt());
         }

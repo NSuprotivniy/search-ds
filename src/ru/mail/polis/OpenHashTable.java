@@ -26,7 +26,7 @@ public class OpenHashTable<E extends Comparable<E>> implements ISet<E> {
         }
     }
 
-    private int Capacity = 128;
+    private int Capacity = 8;
     private int size;
     private HashEntry[] table;
 
@@ -35,16 +35,17 @@ public class OpenHashTable<E extends Comparable<E>> implements ISet<E> {
     private Comparator<E> comparator;
 
     public OpenHashTable() {
+        comparator = null;
         table =  (HashEntry[]) Array.newInstance(HashEntry.class, Capacity);
     }
 
     public OpenHashTable(int size) {
+        comparator = null;
         Capacity = size;
         table =  (HashEntry[]) Array.newInstance(HashEntry.class, Capacity);
     }
 
     public OpenHashTable(Comparator<E> comparator) {
-
         this.comparator = comparator;
         table = (HashEntry[]) Array.newInstance(HashEntry.class, Capacity);
 
@@ -64,7 +65,7 @@ public class OpenHashTable<E extends Comparable<E>> implements ISet<E> {
     public boolean contains(E value) {
         int step = 0;
         int hash = hash(value, 0);
-        while (table[hash] != null && value.compareTo(table[hash].getValue()) != 0)
+        while (table[hash] != null && compare(value, table[hash].getValue()) != 0)
             hash = hash(value, ++step);
         if (table[hash] == null)
             return false;
@@ -76,12 +77,13 @@ public class OpenHashTable<E extends Comparable<E>> implements ISet<E> {
     public boolean add(E value) {
         int step = 0;
         while (true) {
-            int hash = hash(value, ++step);
+            int hash = hash(value, step++);
             if (table[hash] == null || table[hash] == deleted) {
                 table[hash] = new HashEntry(hash, value);
                 size++;
+                resize();
                 return true;
-            } else if (value.compareTo(table[hash].getValue()) == 0) {
+            } else if ( compare(value, table[hash].getValue()) == 0) {
                 return false;
             }
         }
@@ -91,17 +93,18 @@ public class OpenHashTable<E extends Comparable<E>> implements ISet<E> {
     public boolean remove(E value) {
         int step = 0;
         int hash = hash(value, 0);
-        while (table[hash] != null && value.compareTo(table[hash].getValue()) != 0)
+        while (table[hash] != null && table[hash] != deleted && compare(value, table[hash].getValue()) != 0)
             hash = hash(value, ++step);
         if (table[hash] == null) {
+//            System.out.println("DEBUG");
             return false;
         }
-        else if(value.compareTo(table[hash].getValue()) == 0) {
+        else if(table[hash] == deleted || compare(value, table[hash].getValue()) == 0) {
             table[hash] = deleted;
             size--;
             return true;
         }
-        return true;
+        return false;
     }
 
 
@@ -110,6 +113,7 @@ public class OpenHashTable<E extends Comparable<E>> implements ISet<E> {
         int key = value.hashCode();
         if (key < 0) key = -key;
         key = hash1(key) + step * hash2(key);
+        //System.out.println(Capacity + " " + value + " " + key + " " + step);
         return key  % Capacity;
     }
 
@@ -125,31 +129,28 @@ public class OpenHashTable<E extends Comparable<E>> implements ISet<E> {
 
     private void resize() {
         if (size > Capacity / 2) {
-            int old_size = Capacity;
+            int oldCapacity = Capacity;
             HashEntry[] old_table = table;
 
+            size = 0;
             Capacity = Capacity * 2;
-            HashEntry[] table = (HashEntry[]) Array.newInstance(HashEntry.class, Capacity);
+            table = (HashEntry[]) Array.newInstance(HashEntry.class, Capacity);
 
-            rehash(old_table, old_size);
+            rehash(old_table, oldCapacity);
 
-        } else if (size < Capacity / 4) {
-            int old_size = Capacity;
-            HashEntry[] old_table = table;
-
-            Capacity = Capacity / 2;
-            HashEntry[] table = (HashEntry[]) Array.newInstance(HashEntry.class, Capacity);
-
-            rehash(old_table, old_size);
         }
     }
 
-    private void rehash(HashEntry[] old_table, int old_size) {
-        for (int i = 0; i < old_size; i++) {
+    private void rehash(HashEntry[] old_table, int oldCapacity) {
+        for (int i = 0; i < oldCapacity; i++) {
             if (old_table[i] != null && old_table[i] != deleted) {
                 add(old_table[i].getValue());
             }
         }
+    }
+
+    private int compare(E v1, E v2) {
+        return comparator == null ? v1.compareTo(v2) : comparator.compare(v1, v2);
     }
 
 
@@ -169,24 +170,50 @@ public class OpenHashTable<E extends Comparable<E>> implements ISet<E> {
 
         @Override
         public E next() {
-            while (table[index] == null || table[index] == deleted) index++;
+            while (index < Capacity && (table[index] == null || table[index] == deleted)) index++;
             return table[index++].getValue();
         }
     }
+
 
 
     public static void main(String[] args) {
         OpenHashTable<String> table = new OpenHashTable<String>();
 
         Random rnd = new Random();
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 100; i++) {
             table.add(Integer.toString(rnd.nextInt()));
+        }
+
+        Iterator<String> iterator;
+
+        System.out.println(table.size());
+        iterator = table.iterator();
+        while (iterator.hasNext())
+            System.out.println(iterator.next());
+
+
+        boolean result;
+        String value;
+        iterator = table.iterator();
+        while (iterator.hasNext()) {
+            value = iterator.next();
+            result = table.remove(value);
+            System.out.println(value + " " + result);
         }
 
 
         System.out.println(table.size());
+        iterator = table.iterator();
+        while (iterator.hasNext())
+            System.out.println(iterator.next());
 
-        Iterator<String> iterator = table.iterator();
+        for (int i = 0; i < 100; i++) {
+            table.add(Integer.toString(rnd.nextInt()));
+        }
+
+        System.out.println(table.size());
+        iterator = table.iterator();
         while (iterator.hasNext())
             System.out.println(iterator.next());
     }
