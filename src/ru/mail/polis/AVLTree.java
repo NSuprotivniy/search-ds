@@ -267,7 +267,7 @@ public class AVLTree<E extends Comparable<E>> implements ISortedSet<E> {
 
     private int max(int a, int b)
     {
-        return a > b ? a : b;
+        return Math.max(a, b);
     }
 
 

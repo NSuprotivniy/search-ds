@@ -1,55 +1,75 @@
 package ru.mail.polis;
 
 import java.util.Comparator;
-import java.lang.reflect.Array;
+//import java.lang.reflect.Array;
 import java.util.Iterator;
 import java.util.Random;
 
 //TODO: write code here
 public class OpenHashTable<E extends Comparable<E>> implements ISet<E> {
 
-    public class HashEntry {
-        private int key;
-        private E value;
+//    public class HashEntry {
+//        private int key;
+//        private E value;
+//
+//        HashEntry(int key, E value) {
+//            this.key = key;
+//            this.value = value;
+//        }
+//
+//        public int getKey() {
+//            return key;
+//        }
+//
+//        public E getValue() {
+//            return value;
+//        }
+//    }
 
-        HashEntry(int key, E value) {
-            this.key = key;
-            this.value = value;
-        }
-
-        public int getKey() {
-            return key;
-        }
-
-        public E getValue() {
-            return value;
-        }
-    }
-
-    private int Capacity = 8;
+    private int capacity = 8;
     private int size;
-    private HashEntry[] table;
+    //private HashEntry[] table;
+    private Object[] table;
 
-    private HashEntry deleted = new HashEntry(-1, null);
+    //private HashEntry deleted = new HashEntry(-1, null);
+    private Object deleted = new Object();
 
     private Comparator<E> comparator;
 
+//    public OpenHashTable() {
+//        comparator = null;
+//        table =  (HashEntry[]) Array.newInstance(HashEntry.class, capacity);
+//    }
+//
+//    public OpenHashTable(int size) {
+//        comparator = null;
+//        capacity = size;
+//        table =  (HashEntry[]) Array.newInstance(HashEntry.class, capacity);
+//    }
+//
+//    public OpenHashTable(Comparator<E> comparator) {
+//        this.comparator = comparator;
+//        table = (HashEntry[]) Array.newInstance(HashEntry.class, capacity);
+//
+//    }
+
     public OpenHashTable() {
         comparator = null;
-        table =  (HashEntry[]) Array.newInstance(HashEntry.class, Capacity);
+        table = new Object[capacity];
     }
 
     public OpenHashTable(int size) {
         comparator = null;
-        Capacity = size;
-        table =  (HashEntry[]) Array.newInstance(HashEntry.class, Capacity);
+        capacity = size;
+        table = new Object[capacity];
     }
 
     public OpenHashTable(Comparator<E> comparator) {
         this.comparator = comparator;
-        table = (HashEntry[]) Array.newInstance(HashEntry.class, Capacity);
+        table = new Object[capacity];
 
     }
+
 
     @Override
     public int size() {
@@ -65,7 +85,8 @@ public class OpenHashTable<E extends Comparable<E>> implements ISet<E> {
     public boolean contains(E value) {
         int step = 0;
         int hash = hash(value, 0);
-        while (table[hash] != null && compare(value, table[hash].getValue()) != 0)
+        //while (table[hash] != null && compare(value, table[hash].getValue()) != 0)
+        while (table[hash] != null && compare(value, (E)table[hash]) != 0)
             hash = hash(value, ++step);
         if (table[hash] == null)
             return false;
@@ -79,11 +100,13 @@ public class OpenHashTable<E extends Comparable<E>> implements ISet<E> {
         while (true) {
             int hash = hash(value, step++);
             if (table[hash] == null || table[hash] == deleted) {
-                table[hash] = new HashEntry(hash, value);
+                //table[hash] = new HashEntry(hash, value);
+                table[hash] = value;
                 size++;
                 resize();
                 return true;
-            } else if ( compare(value, table[hash].getValue()) == 0) {
+            //} else if ( compare(value, table[hash].getValue()) == 0) {
+            } else if ( compare(value, (E)table[hash]) == 0) {
                 return false;
             }
         }
@@ -93,13 +116,18 @@ public class OpenHashTable<E extends Comparable<E>> implements ISet<E> {
     public boolean remove(E value) {
         int step = 0;
         int hash = hash(value, 0);
-        while (table[hash] != null && table[hash] != deleted && compare(value, table[hash].getValue()) != 0)
+        //while (table[hash] != null && table[hash] != deleted && compare(value, table[hash].getValue()) != 0)
+        while (table[hash] != null && table[hash] == deleted || compare(value, (E)table[hash]) != 0)
             hash = hash(value, ++step);
         if (table[hash] == null) {
 //            System.out.println("DEBUG");
             return false;
         }
-        else if(table[hash] == deleted || compare(value, table[hash].getValue()) == 0) {
+        //else if(table[hash] == deleted || compare(value, table[hash].getValue()) == 0) {
+        else if(table[hash] == deleted) {
+            return false;
+        }
+        else if(compare(value, (E)table[hash]) == 0) {
             table[hash] = deleted;
             size--;
             return true;
@@ -113,12 +141,12 @@ public class OpenHashTable<E extends Comparable<E>> implements ISet<E> {
         int key = value.hashCode();
         if (key < 0) key = -key;
         key = hash1(key) + step * hash2(key);
-        //System.out.println(Capacity + " " + value + " " + key + " " + step);
-        return key  % Capacity;
+        //System.out.println(capacity + " " + value + " " + key + " " + step);
+        return key  % capacity;
     }
 
     private int hash1(int key) {
-        return key % Capacity;
+        return key % capacity;
     }
 
     private int hash2(int key) {
@@ -128,23 +156,27 @@ public class OpenHashTable<E extends Comparable<E>> implements ISet<E> {
     }
 
     private void resize() {
-        if (size > Capacity / 2) {
-            int oldCapacity = Capacity;
-            HashEntry[] old_table = table;
+        if (size > capacity / 2) {
+            int oldCapacity = capacity;
+            //HashEntry[] old_table = table;
+            Object[] old_table = table;
 
             size = 0;
-            Capacity = Capacity * 2;
-            table = (HashEntry[]) Array.newInstance(HashEntry.class, Capacity);
+            capacity = capacity * 2;
+            //table = (HashEntry[]) Array.newInstance(HashEntry.class, capacity);
+            table = new Object[capacity];
 
             rehash(old_table, oldCapacity);
 
         }
     }
 
-    private void rehash(HashEntry[] old_table, int oldCapacity) {
+    //private void rehash(HashEntry[] old_table, int oldCapacity) {
+    private void rehash(Object[] old_table, int oldCapacity) {
         for (int i = 0; i < oldCapacity; i++) {
             if (old_table[i] != null && old_table[i] != deleted) {
-                add(old_table[i].getValue());
+                //add(old_table[i].getValue());
+                add((E)old_table[i]);
             }
         }
     }
@@ -164,14 +196,15 @@ public class OpenHashTable<E extends Comparable<E>> implements ISet<E> {
 
         @Override
         public boolean hasNext() {
-            while (index < Capacity && (table[index] == null || table[index] == deleted)) index++;
-            return index < Capacity - 1;
+            while (index < capacity && (table[index] == null || table[index] == deleted)) index++;
+            return index < capacity - 1;
         }
 
         @Override
         public E next() {
-            while (index < Capacity && (table[index] == null || table[index] == deleted)) index++;
-            return table[index++].getValue();
+            while (index < capacity && (table[index] == null || table[index] == deleted)) index++;
+            //return table[index++].getValue();
+            return (E)table[index++];
         }
     }
 

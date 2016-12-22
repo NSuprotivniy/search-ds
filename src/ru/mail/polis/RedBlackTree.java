@@ -138,7 +138,8 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
         } else {
             node.color = Color.RED;
             while (true) {
-                if (compare(node.value, temp.value) < 0) {
+                int cmp = compare(node.value, temp.value);
+                if (cmp < 0) {
                     if (temp.left == nil) {
                         temp.left = node;
                         node.parent = temp;
@@ -146,7 +147,7 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
                     } else {
                         temp = temp.left;
                     }
-                } else if (compare(node.value, temp.value) >= 0) {
+                } else if (cmp >= 0) {
                     if (temp.right == nil) {
                         temp.right = node;
                         node.parent = temp;
@@ -154,6 +155,9 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
                     } else {
                         temp = temp.right;
                     }
+                }
+                else {
+                    return false;
                 }
             }
             fixTree(node);
