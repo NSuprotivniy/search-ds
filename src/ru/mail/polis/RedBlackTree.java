@@ -283,8 +283,10 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
 
     @Override
     public boolean remove(E value) {
+        if (value == null) return false;
+
         Node z;
-        if((z = contains(value, root))==null)
+        if((z = contains(value, root))==nil)
             return false;
         Node x;
         Node y = z;
@@ -392,6 +394,8 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
     public static void main(String[] args) {
         RedBlackTree<Integer> tree = new RedBlackTree<Integer>();
 
+        tree.remove(0)  ;
+
         Random rnd = new Random();
         for (int i = 0; i < 20; i++) {
             tree.add(rnd.nextInt());
@@ -416,5 +420,7 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
         System.out.println(tree.size());
         for (Integer i : tree.inorderTraverse())
             System.out.println(i);
+
+
     }
 }
