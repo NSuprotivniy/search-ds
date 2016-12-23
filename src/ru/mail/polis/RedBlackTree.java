@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.NoSuchElementException;
 
 //TODO: write code here
 public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
@@ -54,7 +55,7 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
     @Override
     public E first() {
         if (isEmpty()) {
-            throw new IllegalArgumentException("set is empty, no first element");
+            throw new NoSuchElementException("set is empty, no first element");
         }
         Node curr = root;
         while (curr.left != null) {
@@ -66,7 +67,7 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
     @Override
     public E last() {
         if (isEmpty()) {
-            throw new IllegalArgumentException("set is empty, no last element");
+            throw new NoSuchElementException("set is empty, no last element");
         }
         Node curr = root;
         while (curr.right != null) {
@@ -129,6 +130,7 @@ public class RedBlackTree<E extends Comparable<E>> implements ISortedSet<E> {
 
     @Override
     public boolean add(E value) {
+        if (contains(value)) return false;
         Node temp = root;
         Node node = new Node(value);
         if (root == nil) {

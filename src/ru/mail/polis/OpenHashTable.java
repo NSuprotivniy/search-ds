@@ -138,22 +138,64 @@ public class OpenHashTable<E extends Comparable<E>> implements ISet<E> {
 
     private int hash(E value, int step)
     {
-        int key = value.hashCode();
-        if (key < 0) key = -key;
-        key = hash1(key) + step * hash2(key);
-        //System.out.println(capacity + " " + value + " " + key + " " + step);
+        int key = Math.abs(hash1(value) + step * hash2(value));
         return key  % capacity;
     }
 
-    private int hash1(int key) {
-        return key % capacity;
+    private int hash1(E value) {
+
+        if (value.getClass() == String.class) {
+
+            String val = (String) value;
+            int hash = 0, pow = 1, p = 31;
+
+            if(val.length() > 0) {
+                char[] array = val.toCharArray();
+
+                for(int i = 0; i < val.length(); ++i) {
+                    hash += (array[i] - 'a' + 1) * pow;
+                    pow *= p;
+                }
+            }
+
+            return hash;
+        }
+        else return value.hashCode() % capacity;
     }
 
-    private int hash2(int key) {
-        int h2 = 1 + (key & 7);
-        if(h2 % 2 == 0) h2++;
-        return h2;
+    private int hash2(E value) {
+        if (value.getClass() == String.class) {
+
+            String val = (String) value;
+
+
+            int h1 = 0, h2 = 0;
+
+            if (val.length() > 0) {
+                char[] array = val.toCharArray();
+                h1 = array[0];
+                h2 = array[1];
+                int i = 1;
+                while (i < val.length()){
+                    h1 = h1 ^ Character.getNumericValue(array[i]);
+                    h2 = h2 ^ Character.getNumericValue(array[i]);
+                    i++;
+                }
+            }
+
+            return  (h1 << 8)|h2;
+
+
+
+        }
+        else {
+            int key = value.hashCode();
+            int h2 = 1 + (key & 7);
+            if (h2 % 2 == 0) h2++;
+            return h2;
+        }
     }
+
 
     private void resize() {
         if (size > capacity / 2) {

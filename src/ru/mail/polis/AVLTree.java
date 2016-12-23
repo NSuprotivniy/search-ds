@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.NoSuchElementException;
 
 //TODO: write code here
 public class AVLTree<E extends Comparable<E>> implements ISortedSet<E> {
@@ -52,7 +53,7 @@ public class AVLTree<E extends Comparable<E>> implements ISortedSet<E> {
     public E first() {
 
         if (isEmpty()) {
-            throw new IllegalArgumentException("set is empty, no first element");
+            throw new NoSuchElementException("set is empty, no first element");
         }
         Node curr = root;
         while (curr.left != null) {
@@ -64,7 +65,7 @@ public class AVLTree<E extends Comparable<E>> implements ISortedSet<E> {
     @Override
     public E last() {
         if (isEmpty()) {
-            throw new IllegalArgumentException("set is empty, no last element");
+            throw new NoSuchElementException("set is empty, no last element");
         }
         Node curr = root;
         while (curr.right != null) {
@@ -169,8 +170,8 @@ public class AVLTree<E extends Comparable<E>> implements ISortedSet<E> {
 
     @Override
     public boolean remove(E value) {
-        if (value == null) throw new IllegalArgumentException("argument to delete() is null");
-        //if (!contains(value)) return false;
+        if (value == null) throw new NullPointerException("argument to delete() is null");
+        if(contains(value) == false) return false;
         root = remove(value, root);
         return true;
     }
@@ -276,29 +277,22 @@ public class AVLTree<E extends Comparable<E>> implements ISortedSet<E> {
     public static void main(String[] args) {
         AVLTree<Integer> tree = new AVLTree<Integer>();
 
-        Random rnd = new Random();
         for (int i = 0; i < 20; i++) {
-            tree.add(rnd.nextInt());
+            tree.add(i);
         }
 
-        System.out.println(tree.size());
+        System.out.println("SIZE " + tree.size());
         for (Integer i : tree.inorderTraverse())
-            System.out.println(i);
-
-        for (Integer i : tree.inorderTraverse())
-            tree.remove(i);
-
-        System.out.println(tree.size());
-        for (Integer i : tree.inorderTraverse())
-            System.out.println(i);
+            System.out.print(i + " ");
 
 
-        for (int i = 0; i < 20; i++) {
-            tree.add(rnd.nextInt());
+        for (int i = 10; i < 30; i++) {
+            System.out.println(i + " " + tree.remove(i));
         }
 
-        System.out.println(tree.size());
+        System.out.println();
+        System.out.println("SIZE " + tree.size());
         for (Integer i : tree.inorderTraverse())
-            System.out.println(i);
+            System.out.print(i + " ");
     }
 }
